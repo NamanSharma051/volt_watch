@@ -93,7 +93,7 @@ class BackgroundService {
       'battery_tracking_task',
       'batteryTracking',
       frequency: const Duration(minutes: 15),
-      constraints: Constraints(networkType: NetworkType.not_required),
+      constraints: Constraints(networkType: NetworkType.notRequired),
     );
   }
 }
