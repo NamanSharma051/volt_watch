@@ -1,22 +1,62 @@
 # VoltWatch
 
-A Flutter app I built for monitoring battery health in real time. It tracks your charge level, logs history over time, sends you alerts when you hit a threshold you care about, and keeps doing all of that even after you close the app.
+A Flutter app for monitoring battery health in real time. It tracks your charge level, logs history over time, sends alerts when you hit a threshold you care about, and keeps doing all of that even after you close the app.
 
 ---
 
-## Getting it running
+## ⚡ Quick Start for Evaluators
 
-You'll need Flutter (I used 3.44.3), JDK 17, and Android SDK installed. Once you have those:
+There are **two ways** to run this — pick whichever is easier for you.
+
+### Option A — Install the APK directly (no Flutter needed)
+
+> Best if you just want to see the app running on an Android device.
+
+1. Download **`volt_watch.apk`** from the [Releases](https://github.com/NamanSharma051/volt_watch/releases/latest) page of this repo.
+2. Transfer it to your Android phone (USB or any file-sharing method).
+3. On the phone: enable **Install from unknown sources** (Settings → Security → Install unknown apps).
+4. Tap the APK file to install and open VoltWatch.
+
+> ⚠️ Minimum Android version: **Android 8.0 (API 26)**. The app will not install on older devices.
+
+---
+
+### Option B — Build and run from source
+
+> Best if you want to review the code running live on a device/emulator.
+
+**Prerequisites:**
+| Tool | Version | Download |
+|------|---------|----------|
+| Flutter SDK | 3.x (tested on 3.44.3) | [flutter.dev/docs/get-started/install](https://flutter.dev/docs/get-started/install) |
+| JDK | 17 | [adoptium.net](https://adoptium.net/) |
+| Android SDK | API 34 | Comes with Android Studio |
+| Android device or emulator | Android 8.0+ | — |
+
+**Steps:**
 
 ```bash
+# 1. Clone the repo
+git clone https://github.com/NamanSharma051/volt_watch.git
+cd volt_watch
+
+# 2. Install dependencies
 flutter pub get
+
+# 3. Generate Hive adapters (required — the app won't compile without this)
 flutter pub run build_runner build --delete-conflicting-outputs
+
+# 4. Connect an Android device (or start an emulator), then run
 flutter run
 ```
 
-If you're on Android, plug in a device or start an emulator and swap `flutter run` for `flutter run -d android`. The APK is already built and sitting at `build/app/outputs/flutter-apk/app-release.apk` if you just want to sideload it.
+> **Windows only:** If step 2 fails with a symlink error, go to Settings → Privacy & Security → Developer Mode and turn it on. This is a Flutter-on-Windows requirement, not specific to this project.
 
-> **Note on Windows:** If `flutter pub get` complains about symlinks, you need Developer Mode on. Go to Settings → Privacy & Security → Developer Mode and flip it on. That's a Flutter-on-Windows thing, not specific to this project.
+**Verify the setup worked:**
+```bash
+flutter doctor   # should show no critical errors
+flutter devices  # should show your connected device or emulator
+```
 
 ---
 
