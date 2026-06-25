@@ -105,8 +105,10 @@ class BatteryViewModel extends StateNotifier<BatteryState> {
 
     // if the db is empty on first run, put some historic data in so the chart isn't blank
     final initialLogs = await _repository.getBatteryLogs();
+    if (!mounted) return;
     if (initialLogs.isEmpty) {
       await _seedMockLogs();
+      if (!mounted) return;
     }
 
     int level = 94;
@@ -117,15 +119,18 @@ class BatteryViewModel extends StateNotifier<BatteryState> {
     } catch (e) {
       debugPrint('battery level unavailable, defaulting to 94: $e');
     }
+    if (!mounted) return;
 
     try {
       bpState = await _battery.batteryState.timeout(const Duration(seconds: 2));
     } catch (e) {
       debugPrint('battery state unavailable, defaulting to charging: $e');
     }
+    if (!mounted) return;
 
     final mappedStatus = _mapStatus(bpState);
     final logs = await _repository.getBatteryLogs();
+    if (!mounted) return;
 
     state = state.copyWith(
       level: level,
@@ -172,9 +177,10 @@ class BatteryViewModel extends StateNotifier<BatteryState> {
   void _startPolling() async {
     _pollingTimer?.cancel();
     final intervalSeconds = await _repository.getPollingInterval();
+    if (!mounted) return; // guard: don't create timer after disposal
     _pollingTimer = Timer.periodic(
         Duration(milliseconds: (intervalSeconds * 1000).round()), (_) {
-      _updateTelemetryAndInsights();
+      if (mounted) _updateTelemetryAndInsights();
     });
   }
 
@@ -294,6 +300,7 @@ class BatteryViewModel extends StateNotifier<BatteryState> {
 
     // smooth it through kalman if the user hasn't turned that off
     final useSmoothing = await _repository.getPredictiveSmoothing();
+    if (!mounted) return; // guard: ViewModel may have been disposed during await
     final double finalVoltage =
         useSmoothing ? _voltageFilter.filter(rawVoltage) : rawVoltage;
     final double finalCurrent =
@@ -359,7 +366,9 @@ class BatteryViewModel extends StateNotifier<BatteryState> {
         temperature: double.parse(finalTemp.toStringAsFixed(1)),
       );
       await _repository.logBatteryStatus(newLog);
+      if (!mounted) return;
       updatedLogs = await _repository.getBatteryLogs();
+      if (!mounted) return;
     }
 
     state = state.copyWith(

@@ -36,8 +36,13 @@ class BatteryLocalDatasource {
   Future<void> setWarningOffset(int v) =>
       settingsBox.put(AppConstants.warningOffsetKey, v);
 
-  Future<int> getWarningOffset() async =>
-      settingsBox.get(AppConstants.warningOffsetKey, defaultValue: 10) as int;
+  Future<int> getWarningOffset() async {
+    const validOffsets = [5, 10, 15, 20];
+    final raw =
+        settingsBox.get(AppConstants.warningOffsetKey, defaultValue: 10) as int;
+    // DropdownButton will crash if value isn't in its items list — clamp to valid
+    return validOffsets.contains(raw) ? raw : 10;
+  }
 
   // dark / light preference
 
