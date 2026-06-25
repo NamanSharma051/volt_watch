@@ -134,7 +134,11 @@ class _BatteryChartState extends State<BatteryChart> {
                         ),
                         getTooltipItems: (touchedSpots) {
                           return touchedSpots.map((LineBarSpot touchedSpot) {
-                            final log = filteredLogs[touchedSpot.x.toInt()];
+                            final index = touchedSpot.x.toInt();
+                            if (index < 0 || index >= filteredLogs.length) {
+                              return null;
+                            }
+                            final log = filteredLogs[index];
                             final timeStr =
                                 DateFormat('HH:mm:ss').format(log.timestamp);
                             return LineTooltipItem(

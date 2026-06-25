@@ -13,19 +13,40 @@ import 'presentation/viewmodels/providers.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // open hive boxes before anything touches storage
+  // Init Hive — if boxes are corrupted from a previous install, wipe and recreate
   await Hive.initFlutter();
   Hive.registerAdapter(BatteryLogAdapter());
-  final logBox = await Hive.openBox<BatteryLog>(AppConstants.batteryBoxName);
-  final settingsBox = await Hive.openBox(AppConstants.settingsBoxName);
 
-  // skip notifications + background task on web, they don't work there anyway
+  late Box<BatteryLog> logBox;
+  late Box settingsBox;
+  try {
+    logBox = await Hive.openBox<BatteryLog>(AppConstants.batteryBoxName);
+    settingsBox = await Hive.openBox(AppConstants.settingsBoxName);
+  } catch (e) {
+    debugPrint('Hive box corrupted, resetting: $e');
+    await Hive.deleteBoxFromDisk(AppConstants.batteryBoxName);
+    await Hive.deleteBoxFromDisk(AppConstants.settingsBoxName);
+    logBox = await Hive.openBox<BatteryLog>(AppConstants.batteryBoxName);
+    settingsBox = await Hive.openBox(AppConstants.settingsBoxName);
+  }
+
+  // Notifications and background tasks — wrapped in try-catch so a WorkManager
+  // failure (common on MIUI / ColorOS / aggressive battery optimisation) never
+  // crashes the app before Flutter draws its first frame.
   if (!kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
           defaultTargetPlatform == TargetPlatform.iOS)) {
-    await NotificationService.init();
-    await BackgroundService.init();
-    await BackgroundService.registerPeriodicTask();
+    try {
+      await NotificationService.init();
+    } catch (e) {
+      debugPrint('NotificationService init failed (non-fatal): $e');
+    }
+    try {
+      await BackgroundService.init();
+      await BackgroundService.registerPeriodicTask();
+    } catch (e) {
+      debugPrint('BackgroundService init failed (non-fatal): $e');
+    }
   }
 
   runApp(
