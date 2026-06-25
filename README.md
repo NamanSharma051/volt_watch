@@ -1,147 +1,105 @@
-# VoltWatch – Battery Management & Analytics Utility
+# VoltWatch
 
-VoltWatch is a production-grade, high-performance Flutter application designed for real-time battery monitoring, historical analytics, and customizable alerts. Built following strict Clean Architecture guidelines, the app provides a smooth, animated interface optimized for maximum responsiveness.
-
----
-
-## 🛠 Tech Stack & Core Libraries
-
-- **Framework**: Flutter (Latest Stable)
-- **State Management**: Riverpod (for compile-time safety and localized rebuild separation)
-- **Local Database**: Hive NoSQL (high-speed binary serialization for time-series logging)
-- **Background Tasks**: WorkManager (for periodic background telemetry logs and checks)
-- **Notifications**: Flutter Local Notifications (for local alerts and threshold monitoring)
-- **Charts**: FL Chart (fully hardware-accelerated charting engine)
-- **Icons & Fonts**: Google Fonts (Hanken Grotesk & Montserrat)
+A Flutter app I built for monitoring battery health in real time. It tracks your charge level, logs history over time, sends you alerts when you hit a threshold you care about, and keeps doing all of that even after you close the app.
 
 ---
 
-## ⚙️ Setup Instructions
+## Getting it running
 
-Follow these steps to configure, build, and run the VoltWatch project:
+You'll need Flutter (I used 3.44.3), JDK 17, and Android SDK installed. Once you have those:
 
-### 1. Prerequisites
-Ensure you have the following installed on your machine:
-- [Flutter SDK (Latest Stable)](https://docs.flutter.dev/get-started/install)
-- [Java Development Kit (JDK 17)](https://adoptium.net/temurin/releases/?version=17)
-- [Android SDK Platform Tools](https://developer.android.com/studio/releases/platform-tools) (if running on Android)
-
-### 2. Clone the Repository
-```bash
-git clone <repository-url>
-cd volt_watch
-```
-
-### 3. Fetch Dependencies
 ```bash
 flutter pub get
-```
-
-### 4. Code Generation (Hive Database Adapters)
-VoltWatch uses Hive for fast object serialization. Generate the database adapters by running:
-```bash
 flutter pub run build_runner build --delete-conflicting-outputs
+flutter run
 ```
 
-### 5. Build and Run the App
-- **Web (Chrome)**:
-  ```bash
-  flutter run -d chrome
-  ```
-- **Android Device/Emulator**:
-  ```bash
-  flutter run -d android
-  ```
-- **Android Release APK**:
-  ```bash
-  flutter build apk --release
-  ```
+If you're on Android, plug in a device or start an emulator and swap `flutter run` for `flutter run -d android`. The APK is already built and sitting at `build/app/outputs/flutter-apk/app-release.apk` if you just want to sideload it.
+
+> **Note on Windows:** If `flutter pub get` complains about symlinks, you need Developer Mode on. Go to Settings → Privacy & Security → Developer Mode and flip it on. That's a Flutter-on-Windows thing, not specific to this project.
 
 ---
 
-## 📁 Architecture Breakdown
-
-VoltWatch is organized according to the **Repository Pattern** and **Clean Architecture** conventions to isolate business logic, data models, and presentation states:
+## How the code is structured
 
 ```
 lib/
-│
 ├── core/
-│   ├── constants/       # App titles, Hive box names, default configurations
-│   ├── services/        # System services (Background task handlers, Local Notifications)
-│   └── utils/           # Math engines (Kalman filter for telemetry smoothing, Time Estimators)
+│   ├── constants/        → app_constants.dart  (Hive box names, setting keys, color values)
+│   ├── services/         → background_service.dart, notification_service.dart
+│   └── utils/            → battery_estimator.dart, kalman_filter.dart
 │
 ├── data/
-│   ├── models/          # Data schemas (Hive-annotated BatteryLog class)
-│   └── repositories/    # Hive implementation of repositories (database CRUD and properties)
+│   ├── datasources/      → battery_local_datasource.dart  (all raw Hive reads/writes live here)
+│   ├── models/           → battery_log.dart + generated adapter
+│   └── repositories/     → abstract interface + impl that delegates to the datasource
 │
 ├── presentation/
-│   ├── screens/         # Page components (Dashboard, Analytics, Alerts, Settings)
-│   ├── viewmodels/      # Riverpod Notifier engines (State managers separating UI from data)
-│   └── widgets/         # Custom painters and graphs (Cyberpunk Gauge, Consumption Chart)
+│   ├── screens/          → dashboard, analytics, alerts, settings, main shell
+│   ├── viewmodels/       → BatteryViewModel, SettingsViewModel, providers
+│   └── widgets/          → battery gauge, charts
 │
-└── main.dart            # Multi-platform entry point and global provider scopes
+└── main.dart
 ```
 
-### Key Architectural Decisions:
-- **Separation of Presentation and ViewModel**: Views never query database repositories directly. They bind to Riverpod providers (`batteryViewModelProvider`, `settingsViewModelProvider`) which publish immutable states.
-- **Repository Abstraction**: UI and logic layer interact with abstract repository interfaces, allowing seamless swapping of local storage engines (e.g., from Hive to SQLite) without altering downstream code.
-- **Service Layer Isolation**: Background processes (WorkManager) utilize static entry points that spin up isolated headless engine channels, decoupling background writes from active UI contexts.
+I kept the layers strict on purpose. The ViewModels never touch Hive directly — they only call the repository interface. The datasource is where the actual `box.get` / `box.put` calls happen. That way if I ever want to swap Hive for SQLite or Isar, I only touch one file.
+
+Riverpod wires everything together through `providers.dart`:
+`BatteryLocalDatasource` → `BatteryRepositoryImpl` → `BatteryViewModel` / `SettingsViewModel` → UI
 
 ---
 
-## 📝 Technical Decisions
+## What it does
 
-### 1. Local Storage (Hive NoSQL vs. SQLite)
-We selected **Hive** as our database solution for time-series logging:
-- **Speed**: Hive writes directly to binary files, showing speeds up to 10x faster than SQLite, which is crucial for high-frequency telemetry logging.
-- **Efficiency**: No SQL overhead or query compilation. Adapters serialize Dart objects directly to disk.
-- **Reliability**: Isolated database box files prevent locks during parallel background and foreground operations.
+**Dashboard** — the main screen shows a custom-painted animated gauge that changes colour as your battery drains (green above 80%, yellow between 40–79%, red below 40%). Below the gauge there's a live telemetry strip with voltage, current draw, wattage and temperature. If your phone is charging, it shows a rough estimate of time to full based on the current charge rate.
 
-### 2. Background Processing Strategy (WorkManager)
-Background execution handles periodic tracking every 15 minutes:
-- **Android**: Registered a periodic task using `Workmanager` which executes a native `PeriodicWorkRequest`.
-- **iOS**: Uses `BGTaskScheduler` backing.
-- **Power Optimization**: Tasks are configured with network-free requirements to minimize power draw, executing battery checks within under 5 seconds before going back to sleep.
+**Analytics** — every 15 minutes the app logs your battery level and charging state to a local Hive database. The analytics screen plots this on a line chart (using fl_chart) with Live / 1H / 24H filter modes. You can also scroll through the raw log table underneath. Pull to refresh to force a sync.
 
-### 3. Local Notification Design
-- **Permission Flow**: Permissions are requested explicitly on first launch or during custom alert creation, handling denials gracefully with interactive UI feedback.
-- **Custom Notifications**: Registered a notification channel (`voltwatch_alerts`) with high priority to deliver instantaneous, local system warnings.
+**Alerts** — you can add as many percentage thresholds as you want (e.g. notify me at 80%, notify me at 20%). When the battery hits any of them, a local notification fires. The test button at the bottom lets you verify your notification channel is working before you rely on it.
+
+**Settings** — dark/light theme toggle (persisted), polling interval (1s / 5s / 15s), predictive smoothing via a Kalman filter, haptic feedback controls, and a "clear all logs" option. There are also quick-switch charging profiles that adjust polling and smoothing together.
 
 ---
 
-## 🛠 Problem Solving & Diagnostics
+## Why I picked these libraries
 
-Here are the three most challenging issues resolved during development:
+**Hive** for storage — I looked at SharedPreferences and SQLite but Hive made more sense here. For time-series data where you're appending a record every 15 minutes and reading back a list, Hive's binary format is noticeably faster than SQLite, and there's no schema migration to worry about. SharedPreferences handles the simple scalar settings (threshold value, theme preference) since that's exactly what it's designed for.
 
-### 1. Namespace Collisions in ViewModels
-- **Symptom**: Compilation errors during imports due to identical class naming (`BatteryState`) between the local ViewModel state and the `battery_plus` package state.
-- **Resolution**: Implemented namespace aliasing by importing the package as `bp.Battery` and referencing its enums explicitly as `bp.BatteryState`, cleanly isolating local classes.
+**Riverpod** for state — I went with `StateNotifier` over `ChangeNotifier` / `Provider` because it makes the state immutable and forces you to be deliberate about updates. Using `.select()` on the consumers means only the widget that actually uses a given field rebuilds when that field changes — which keeps the 1-second battery polling from causing the entire widget tree to redraw every second.
 
-### 2. Dart Web Compiler Runtime Crashes
-- **Symptom**: App crashed on launch on Chrome Web targets with a blank screen. Logs indicated unresolved calls to `.status.name` on dynamic variables.
-- **Resolution**: The compiler could not resolve dynamic properties at runtime in JS. We typed-annotated state variables as `BatteryState` and added static mappings (`statusName`) in the state class, providing compile-time type safety.
+**WorkManager** for background — it's the Android-recommended way to schedule periodic work that survives app termination. I registered a task with `NetworkType.notRequired` so it runs purely on device, no connectivity dependency. On web the background task falls back to a simple in-app timer since there's no equivalent browser API without a service worker.
 
-### 3. Frame Drops and Scroll Lag (Full-Screen Repaint Stutter)
-- **Symptom**: Scrolling on the Dashboard and Analytics screens stuttered (lagged) when telemetry values updated.
-- **Resolution**: 
-  1. The top-level screens watched the entire `batteryViewModelProvider`, causing all elements (including heavy charts, custom painters, and text widgets) to rebuild every 1 second during telemetry updates. We removed the top-level listeners and utilized Riverpod's `select` API inside local `Consumer` wrappers, ensuring only the target text updates rebuild.
-  2. Wrapped dynamic custom painters (like `BatteryGauge`) and graph components in `RepaintBoundary` to isolate paint layers, preventing them from repainting unless their specific dependencies change. This restored scrolling to a buttery smooth **60 FPS** on all screens.
+**flutter_local_notifications** — I deliberately don't ask for notification permission on launch. The permission prompt only appears when you actually add your first alert threshold or tap the test button. In my experience apps that ask for permissions up front before you've given the user any reason to care get denied a lot more often.
 
 ---
 
-## 📽 5-10 Minute Video Walkthrough Outline
+## Stuff that took a while to figure out
 
-Here is a recommended structure for recording your submission walkthrough video:
+**Name collision with battery_plus.** My own state class is called `BatteryState` and so is the enum in the `battery_plus` package. The compiler was happy about it until I imported both in the same file, then it got confused. Fixed it with `import 'package:battery_plus/battery_plus.dart' as bp;` and referenced the package type as `bp.BatteryState` everywhere. Obvious in hindsight, annoying to debug at the time.
 
-| Section | Time | Key Demo Points |
-| :--- | :--- | :--- |
-| **1. Intro & Dashboard** | 0:00 - 2:00 | - Introduce VoltWatch, show the **Cyberpunk Dual-Ring Battery Gauge**.<br>- Demo **Theme Toggle** (Light/Dark mode transition).<br>- Explain the animated gauge colors changing dynamically based on level.<br>- Highlight the real-time telemetry panel (Voltage, Current, Wattage, Temp). |
-| **2. Analytics & Live Curve** | 2:00 - 4:00 | - Navigate to the **Power History** screen.<br>- Demo **Discharge Curve Filters** (Live vs 1H vs 24H data aggregation).<br>- Show the **Telemetry Log Table** records fetched from the local Hive Box.<br>- Perform a **Pull-to-Refresh** to demonstrate manual syncing. |
-| **3. Custom Alert & Haptics** | 4:00 - 6:00 | - Go to **Alert Config**.<br>- Add a custom threshold (e.g. `25%`), show it appearing in the active list.<br>- Tap **Trigger Test Notification** to show local permission handling and toast verification.<br>- Demonstrate **Haptic feedback** triggers on key interactions. |
-| **4. Settings & Diagnostics** | 6:00 - 8:00 | - Adjust the Critical Alert threshold slider.<br>- Change profiles (High Performance vs. Battery Saver) to modify telemetry intervals.<br>- Click **Execute Diagnostics**; show the progress spinner and timestamp update.<br>- Demo **Clear Logs** and confirm database wipe. |
-| **5. Technical Decisions** | 8:00 - 10:00 | - Show directory structure (Clean Architecture layers).<br>- Explain Riverpod state management and why `.select` was critical to solving scroll lag.<br>- Discuss background execution constraints and Hive database speed advantages. |
+**Web crashes with no useful error.** When I first ran it on Chrome I got a red screen with `Null check operator used on a null value` pointing at some enum `.name` call. The issue is that `dart2js` (the Web compiler) is stricter about dynamic types than the native Dart VM. A `final state = ref.watch(...)` that works fine on Android fails on web because the type is inferred as `dynamic`. I went through and explicitly typed every state variable in `build()` methods and pre-computed any string values in the state class rather than calling `.name` on enums in the widget.
+
+**Settings screen crash after reset.** The "Reset to Defaults" button was calling `setThreshold(80)` — which made sense if 80% was the alert threshold, but the slider on the settings screen has a range of 5–30 (it's a critical-low threshold, not a custom alert). 80 is way outside that range so Flutter threw an assertion. I fixed the default to 15, and added a `.clamp(5, 30)` in both the datasource and the viewmodel so even if a bad value somehow gets into Hive, it gets corrected before it ever reaches the slider.
+
+**ListTile inside a Container with BoxDecoration.** Flutter throws a warning when a `ListTile` or `SwitchListTile` sits inside a widget with a background colour set via `BoxDecoration` — the tile paints its ink effects on the nearest `Material` ancestor, which gets hidden behind the `DecoratedBox`. Adding `tileColor` on the tile doesn't actually fix it. The real fix is replacing the `Container` + `BoxDecoration` with `ClipRRect` + `Material` as the parent, which gives the tiles a proper Material surface to paint on.
 
 ---
 
-Developed by Manus – Senior Lead Application Developer.
+## Known limitations
+
+- **Web / battery data**: Browsers don't expose raw battery hardware (voltage, current, wattage) via any public API, and even the basic Battery Status API is disabled in most browsers for fingerprinting reasons. On web the telemetry values are simulated. On Android they come from the actual hardware.
+- **iOS**: The app targets Android primarily. iOS would need a developer account for physical device testing, and the BGTaskScheduler background API works differently enough that it'd need its own implementation. The code has the platform guards in place but I haven't tested it on a real iPhone.
+- **Background on web**: There's no WorkManager equivalent for the browser. Closing the tab stops everything. A proper solution would need a service worker, which is out of scope here.
+
+---
+
+## Dependencies
+
+```yaml
+battery_plus: ^6.2.3
+flutter_riverpod: ^2.6.1
+hive_flutter: ^1.1.0
+workmanager: ^0.9.0+3
+flutter_local_notifications: ^17.2.4
+fl_chart: ^0.66.2
+```

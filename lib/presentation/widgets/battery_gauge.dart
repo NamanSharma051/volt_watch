@@ -11,7 +11,8 @@ class BatteryGauge extends StatefulWidget {
   State<BatteryGauge> createState() => _BatteryGaugeState();
 }
 
-class _BatteryGaugeState extends State<BatteryGauge> with SingleTickerProviderStateMixin {
+class _BatteryGaugeState extends State<BatteryGauge>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -35,7 +36,8 @@ class _BatteryGaugeState extends State<BatteryGauge> with SingleTickerProviderSt
       _animation = Tween<double>(
         begin: _animation.value,
         end: widget.level / 100,
-      ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic));
+      ).animate(
+          CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic));
       _controller.forward(from: 0);
     }
   }
@@ -67,7 +69,7 @@ class _BatteryGaugeState extends State<BatteryGauge> with SingleTickerProviderSt
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: stateColor.withOpacity(isDark ? 0.05 : 0.02),
+                        color: stateColor.withValues(alpha: isDark ? 0.05 : 0.02),
                         blurRadius: 30,
                         spreadRadius: 5,
                       ),
@@ -99,14 +101,17 @@ class _BatteryGaugeState extends State<BatteryGauge> with SingleTickerProviderSt
                     ),
                     const SizedBox(height: 2),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 2),
                       decoration: BoxDecoration(
-                        color: stateColor.withOpacity(0.1),
+                        color: stateColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: stateColor.withOpacity(0.3), width: 1),
+                        border: Border.all(
+                            color: stateColor.withValues(alpha: 0.3), width: 1),
                       ),
                       child: Text(
-                        _getStatusLabel(widget.level, widget.status).toUpperCase(),
+                        _getStatusLabel(widget.level, widget.status)
+                            .toUpperCase(),
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -134,9 +139,9 @@ class _BatteryGaugeState extends State<BatteryGauge> with SingleTickerProviderSt
   }
 
   Color _getBatteryColor(int level) {
-    if (level >= 80) return const Color(0xFF00FF88);  // Neon Green
-    if (level >= 40) return const Color(0xFFFFDD00);  // Cyberpunk Yellow
-    return const Color(0xFFFF3B30);                   // Neon Red
+    if (level >= 80) return const Color(0xFF00FF88); // Neon Green
+    if (level >= 40) return const Color(0xFFFFDD00); // Cyberpunk Yellow
+    return const Color(0xFFFF3B30); // Neon Red
   }
 }
 
@@ -157,7 +162,7 @@ class _BatteryPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = min(size.width / 2, size.height / 2);
-    
+
     // Config values
     const outerRingWidth = 2.0;
     const mainArcWidth = 8.0;
@@ -173,7 +178,7 @@ class _BatteryPainter extends CustomPainter {
 
     // Draw outer progress ticks
     final tickPaint = Paint()
-      ..color = color.withOpacity(0.4)
+      ..color = color.withValues(alpha: 0.4)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
@@ -193,7 +198,9 @@ class _BatteryPainter extends CustomPainter {
 
     // 2. Main Track (the path behind the thick arc)
     final trackPaint = Paint()
-      ..color = isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.04)
+      ..color = isDark
+          ? Colors.white.withValues(alpha: 0.04)
+          : Colors.black.withValues(alpha: 0.04)
       ..style = PaintingStyle.stroke
       ..strokeWidth = mainArcWidth;
     canvas.drawCircle(center, mainRadius, trackPaint);
@@ -207,7 +214,7 @@ class _BatteryPainter extends CustomPainter {
 
     // Outer glow for progress arc (using low opacity thicker line instead of MaskFilter.blur which fails on web)
     final glowPaint = Paint()
-      ..color = color.withOpacity(0.15)
+      ..color = color.withValues(alpha: 0.15)
       ..style = PaintingStyle.stroke
       ..strokeWidth = mainArcWidth + 6
       ..strokeCap = StrokeCap.round;
@@ -222,7 +229,7 @@ class _BatteryPainter extends CustomPainter {
         false,
         glowPaint,
       );
-      
+
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: mainRadius),
         -pi / 2,
@@ -234,7 +241,8 @@ class _BatteryPainter extends CustomPainter {
 
     // 4. Charging Bolt Indicator (Visual pulse)
     if (isCharging) {
-      final boltColor = isDark ? const Color(0xFF00FF88) : const Color(0xFF00C853);
+      final boltColor =
+          isDark ? const Color(0xFF00FF88) : const Color(0xFF00C853);
       final boltPaint = Paint()
         ..color = boltColor
         ..style = PaintingStyle.fill;
@@ -254,7 +262,7 @@ class _BatteryPainter extends CustomPainter {
 
       // Bolt glow using simple low-opacity outline instead of MaskFilter.blur
       final boltGlow = Paint()
-        ..color = boltColor.withOpacity(0.2)
+        ..color = boltColor.withValues(alpha: 0.2)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 4;
 

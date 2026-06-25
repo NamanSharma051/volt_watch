@@ -32,8 +32,10 @@ class BatteryEstimator {
       final prev = stateLogs[i - 1];
       final curr = stateLogs[i];
 
-      final diffMinutes = curr.timestamp.difference(prev.timestamp).inSeconds / 60.0;
-      if (diffMinutes > 0.2) { // At least 12 seconds between logs
+      final diffMinutes =
+          curr.timestamp.difference(prev.timestamp).inSeconds / 60.0;
+      if (diffMinutes > 0.2) {
+        // At least 12 seconds between logs
         final levelDiff = (curr.batteryLevel - prev.batteryLevel).abs();
         final rate = levelDiff / diffMinutes; // % per minute
         if (rate > 0) {
@@ -79,12 +81,13 @@ class BatteryEstimator {
 
     final now = DateTime.now();
     final oneDayAgo = now.subtract(const Duration(hours: 24));
-    
+
     // Sort logs descending (newest first)
     final sortedLogs = List<BatteryLog>.from(logs)
       ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
-    final recentLogs = sortedLogs.where((log) => log.timestamp.isAfter(oneDayAgo)).toList();
+    final recentLogs =
+        sortedLogs.where((log) => log.timestamp.isAfter(oneDayAgo)).toList();
 
     if (recentLogs.length < 2) {
       return 3.2; // Realistic fallback default (from the design screenshot)
@@ -102,7 +105,8 @@ class BatteryEstimator {
       if (newer.batteryState.toLowerCase() == 'discharging' &&
           older.batteryState.toLowerCase() == 'discharging') {
         final drain = older.batteryLevel - newer.batteryLevel;
-        final timeDiffHours = newer.timestamp.difference(older.timestamp).inSeconds / 3600.0;
+        final timeDiffHours =
+            newer.timestamp.difference(older.timestamp).inSeconds / 3600.0;
 
         if (drain >= 0 && timeDiffHours > 0) {
           totalDrain += drain;
@@ -115,7 +119,8 @@ class BatteryEstimator {
       // If we don't have enough discharging log intervals, get overall change
       final oldest = recentLogs.last;
       final newest = recentLogs.first;
-      final overallHours = newest.timestamp.difference(oldest.timestamp).inSeconds / 3600.0;
+      final overallHours =
+          newest.timestamp.difference(oldest.timestamp).inSeconds / 3600.0;
       if (overallHours > 0.05) {
         final levelDiff = oldest.batteryLevel - newest.batteryLevel;
         if (levelDiff > 0) {

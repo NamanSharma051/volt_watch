@@ -30,7 +30,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
       ref.read(settingsViewModelProvider.notifier).addCustomAlert(value);
       _alertController.clear();
       FocusScope.of(context).unfocus();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Added alert threshold at $value%'),
@@ -69,7 +69,9 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final Color cardColor = isDark ? const Color(0xFF14171A) : Colors.white;
-    final Color borderColor = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+    final Color borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.05)
+        : Colors.black.withValues(alpha: 0.05);
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0B0D0E) : Colors.grey[100],
@@ -79,7 +81,8 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
         scrolledUnderElevation: 0,
         title: Row(
           children: [
-            const Icon(Icons.notifications_active, color: Color(0xFF00FF88), size: 24),
+            const Icon(Icons.notifications_active,
+                color: Color(0xFF00FF88), size: 24),
             const SizedBox(width: 8),
             Text(
               'ALERT CONFIG',
@@ -113,7 +116,10 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
                   children: [
                     Text(
                       'ADD CUSTOM THRESHOLD',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white38 : Colors.black45),
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white38 : Colors.black45),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -123,27 +129,42 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
                           child: TextFormField(
                             controller: _alertController,
                             keyboardType: TextInputType.number,
-                             style: TextStyle(fontFamily: 'monospace', fontSize: 14, color: isDark ? Colors.white : Colors.black87),
+                            style: TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 14,
+                                color: isDark ? Colors.white : Colors.black87),
                             decoration: InputDecoration(
                               hintText: 'Enter level (1-100)',
-                              hintStyle: TextStyle(color: isDark ? Colors.white24 : Colors.black38, fontSize: 13),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              hintStyle: TextStyle(
+                                  color:
+                                      isDark ? Colors.white24 : Colors.black38,
+                                  fontSize: 13),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 12),
                               filled: true,
-                              fillColor: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.03),
+                              fillColor: isDark
+                                  ? Colors.white.withValues(alpha: 0.03)
+                                  : Colors.black.withValues(alpha: 0.03),
                               enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
+                                borderSide: BorderSide(
+                                    color: isDark
+                                        ? Colors.white.withValues(alpha: 0.1)
+                                        : Colors.black.withValues(alpha: 0.1)),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderSide: const BorderSide(color: Color(0xFF00FF88), width: 1.5),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFF00FF88), width: 1.5),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               errorBorder: OutlineInputBorder(
-                                borderSide: const BorderSide(color: Color(0xFFFF3B30)),
+                                borderSide:
+                                    const BorderSide(color: Color(0xFFFF3B30)),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               focusedErrorBorder: OutlineInputBorder(
-                                borderSide: const BorderSide(color: Color(0xFFFF3B30), width: 1.5),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFFF3B30), width: 1.5),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
@@ -166,10 +187,12 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF00FF88),
                               foregroundColor: Colors.black,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
                             ),
                             onPressed: _addAlertThreshold,
-                            child: const Text('ADD', style: TextStyle(fontWeight: FontWeight.w900)),
+                            child: const Text('ADD',
+                                style: TextStyle(fontWeight: FontWeight.w900)),
                           ),
                         ),
                       ],
@@ -193,53 +216,70 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
             ),
             const SizedBox(height: 12),
 
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Material(
                 color: cardColor,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: borderColor),
-              ),
-              child: settings.customAlerts.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Center(
-                        child: Text(
-                          'No alerts configured.',
-                          style: TextStyle(color: isDark ? Colors.white30 : Colors.black38, fontSize: 13),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: borderColor),
+                ),
+                child: settings.customAlerts.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Center(
+                          child: Text(
+                            'No alerts configured.',
+                            style: TextStyle(
+                                color: isDark ? Colors.white30 : Colors.black38,
+                                fontSize: 13),
+                          ),
                         ),
+                      )
+                    : ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: settings.customAlerts.length,
+                        separatorBuilder: (context, index) => Divider(
+                            color: isDark ? Colors.white10 : Colors.black12,
+                            height: 1),
+                        itemBuilder: (context, index) {
+                          final val = settings.customAlerts[index];
+                          return ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 4),
+                            leading: const Icon(
+                                Icons.notifications_active_outlined,
+                                color: Color(0xFF00FF88),
+                                size: 20),
+                            title: Text(
+                              'Alert at $val%',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                            subtitle: Text(
+                              'Will send notification when battery hits $val%',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color:
+                                      isDark ? Colors.white38 : Colors.black54),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete_outline,
+                                  color: Color(0xFFFF3B30), size: 20),
+                              onPressed: () {
+                                if (settings.uiHaptics) {
+                                  HapticFeedback.lightImpact();
+                                }
+                                ref
+                                    .read(settingsViewModelProvider.notifier)
+                                    .removeCustomAlert(val);
+                              },
+                            ),
+                          );
+                        },
                       ),
-                    )
-                  : ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: settings.customAlerts.length,
-                      separatorBuilder: (context, index) => Divider(color: isDark ? Colors.white10 : Colors.black12, height: 1),
-                      itemBuilder: (context, index) {
-                        final val = settings.customAlerts[index];
-                        return ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                          leading: const Icon(Icons.notifications_active_outlined, color: Color(0xFF00FF88), size: 20),
-                          title: Text(
-                            'Alert at $val%',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                          ),
-                          subtitle: Text(
-                            'Will send notification when battery hits $val%',
-                            style: TextStyle(fontSize: 11, color: isDark ? Colors.white38 : Colors.black54),
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete_outline, color: Color(0xFFFF3B30), size: 20),
-                            onPressed: () {
-                              if (settings.uiHaptics) {
-                                HapticFeedback.lightImpact();
-                              }
-                              ref.read(settingsViewModelProvider.notifier).removeCustomAlert(val);
-                            },
-                          ),
-                        );
-                      },
-                    ),
+              ),
             ),
 
             const SizedBox(height: 24),
@@ -263,9 +303,13 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
                       if (settings.uiHaptics) {
                         HapticFeedback.mediumImpact();
                       }
-                      ref.read(settingsViewModelProvider.notifier).clearAlertHistory();
+                      ref
+                          .read(settingsViewModelProvider.notifier)
+                          .clearAlertHistory();
                     },
-                    child: const Text('Clear', style: TextStyle(color: Color(0xFFFF3B30), fontSize: 12)),
+                    child: const Text('Clear',
+                        style:
+                            TextStyle(color: Color(0xFFFF3B30), fontSize: 12)),
                   ),
               ],
             ),
@@ -285,7 +329,9 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
                       child: Center(
                         child: Text(
                           'No alert history logged yet.',
-                          style: TextStyle(color: isDark ? Colors.white30 : Colors.black38, fontSize: 13),
+                          style: TextStyle(
+                              color: isDark ? Colors.white30 : Colors.black38,
+                              fontSize: 13),
                         ),
                       ),
                     )
@@ -296,13 +342,20 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
                       itemBuilder: (context, index) {
                         final log = settings.alertHistory[index];
                         return Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 8),
                           decoration: BoxDecoration(
-                            border: Border(bottom: BorderSide(color: isDark ? Colors.white10 : Colors.black12, width: 0.5)),
+                            border: Border(
+                                bottom: BorderSide(
+                                    color: isDark
+                                        ? Colors.white10
+                                        : Colors.black12,
+                                    width: 0.5)),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.info_outline, size: 14, color: Colors.blue),
+                              const Icon(Icons.info_outline,
+                                  size: 14, color: Colors.blue),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -310,7 +363,9 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontFamily: 'monospace',
-                                    color: isDark ? Colors.white70 : Colors.black87,
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black87,
                                   ),
                                 ),
                               ),
@@ -320,20 +375,24 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
                       },
                     ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // 4. Verification Channel Button
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  side: BorderSide(
+                      color: isDark ? Colors.white24 : Colors.black26),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 icon: const Icon(Icons.bug_report_outlined, size: 18),
-                label: const Text('TRIGGER TEST NOTIFICATION', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                label: const Text('TRIGGER TEST NOTIFICATION',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                 onPressed: _triggerTestNotification,
               ),
             ),

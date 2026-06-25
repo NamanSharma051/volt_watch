@@ -13,7 +13,9 @@ class AnalyticsScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final Color cardColor = isDark ? const Color(0xFF14171A) : Colors.white;
-    final Color borderColor = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+    final Color borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.05)
+        : Colors.black.withValues(alpha: 0.05);
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0B0D0E) : Colors.grey[100],
@@ -56,26 +58,34 @@ class AnalyticsScreen extends ConsumerWidget {
               // 1. Telemetry Highlights Row
               Consumer(
                 builder: (context, ref, child) {
-                  final logs = ref.watch(batteryViewModelProvider.select((s) => s.logs));
-                  final dailyDrainRate = ref.watch(batteryViewModelProvider.select((s) => s.dailyDrainRate));
-                  final level = ref.watch(batteryViewModelProvider.select((s) => s.level));
+                  final logs =
+                      ref.watch(batteryViewModelProvider.select((s) => s.logs));
+                  final dailyDrainRate = ref.watch(
+                      batteryViewModelProvider.select((s) => s.dailyDrainRate));
+                  final level = ref
+                      .watch(batteryViewModelProvider.select((s) => s.level));
 
                   // Compute Peak and Critical values from logs
                   double peakLevel = level.toDouble();
-                  String peakTime = DateFormat('HH:mm:ss').format(DateTime.now());
+                  String peakTime =
+                      DateFormat('HH:mm:ss').format(DateTime.now());
                   double criticalLow = level.toDouble();
-                  String criticalTime = DateFormat('HH:mm:ss').format(DateTime.now());
+                  String criticalTime =
+                      DateFormat('HH:mm:ss').format(DateTime.now());
 
                   if (logs.isNotEmpty) {
                     // Find peak
-                    final peakLog = logs.reduce((curr, next) => curr.batteryLevel > next.batteryLevel ? curr : next);
+                    final peakLog = logs.reduce((curr, next) =>
+                        curr.batteryLevel > next.batteryLevel ? curr : next);
                     peakLevel = peakLog.batteryLevel.toDouble();
                     peakTime = DateFormat('HH:mm:ss').format(peakLog.timestamp);
 
                     // Find critical low
-                    final lowLog = logs.reduce((curr, next) => curr.batteryLevel < next.batteryLevel ? curr : next);
+                    final lowLog = logs.reduce((curr, next) =>
+                        curr.batteryLevel < next.batteryLevel ? curr : next);
                     criticalLow = lowLog.batteryLevel.toDouble();
-                    criticalTime = DateFormat('HH:mm:ss').format(lowLog.timestamp);
+                    criticalTime =
+                        DateFormat('HH:mm:ss').format(lowLog.timestamp);
                   }
 
                   return Container(
@@ -91,18 +101,28 @@ class AnalyticsScreen extends ConsumerWidget {
                       children: [
                         Text(
                           'AVG DRAIN RATE',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white38 : Colors.black45),
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white38 : Colors.black45),
                         ),
                         const SizedBox(height: 8),
                         Row(
                           children: [
                             Text(
-                              '${dailyDrainRate}%',
-                              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, fontFamily: 'monospace'),
+                              '$dailyDrainRate%',
+                              style: const TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'monospace'),
                             ),
                             Text(
                               '/hr',
-                              style: TextStyle(fontSize: 14, color: isDark ? Colors.white38 : Colors.black45, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  color:
+                                      isDark ? Colors.white38 : Colors.black45,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -115,21 +135,40 @@ class AnalyticsScreen extends ConsumerWidget {
                                 children: [
                                   Text(
                                     'PEAK LEVEL',
-                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isDark ? Colors.white38 : Colors.black45),
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark
+                                            ? Colors.white38
+                                            : Colors.black45),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     '${peakLevel.toStringAsFixed(1)}%',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black87),
                                   ),
                                   Text(
                                     '${peakTime}Z',
-                                    style: TextStyle(fontSize: 9, color: isDark ? Colors.white24 : Colors.black38, fontFamily: 'monospace'),
+                                    style: TextStyle(
+                                        fontSize: 9,
+                                        color: isDark
+                                            ? Colors.white24
+                                            : Colors.black38,
+                                        fontFamily: 'monospace'),
                                   ),
                                 ],
                               ),
                             ),
-                            Container(width: 1, height: 40, color: isDark ? Colors.white10 : Colors.black12),
+                            Container(
+                                width: 1,
+                                height: 40,
+                                color:
+                                    isDark ? Colors.white10 : Colors.black12),
                             const SizedBox(width: 16),
                             Expanded(
                               child: Column(
@@ -137,16 +176,29 @@ class AnalyticsScreen extends ConsumerWidget {
                                 children: [
                                   Text(
                                     'CRITICAL LOW',
-                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isDark ? Colors.white38 : Colors.black45),
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark
+                                            ? Colors.white38
+                                            : Colors.black45),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     '${criticalLow.toStringAsFixed(1)}%',
-                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFF3B30)),
+                                    style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFFFF3B30)),
                                   ),
                                   Text(
                                     '${criticalTime}Z',
-                                    style: TextStyle(fontSize: 9, color: isDark ? Colors.white24 : Colors.black38, fontFamily: 'monospace'),
+                                    style: TextStyle(
+                                        fontSize: 9,
+                                        color: isDark
+                                            ? Colors.white24
+                                            : Colors.black38,
+                                        fontFamily: 'monospace'),
                                   ),
                                 ],
                               ),
@@ -174,7 +226,8 @@ class AnalyticsScreen extends ConsumerWidget {
                 child: RepaintBoundary(
                   child: Consumer(
                     builder: (context, ref, child) {
-                      final logs = ref.watch(batteryViewModelProvider.select((s) => s.logs));
+                      final logs = ref.watch(
+                          batteryViewModelProvider.select((s) => s.logs));
                       return BatteryChart(logs: logs);
                     },
                   ),
@@ -197,7 +250,8 @@ class AnalyticsScreen extends ConsumerWidget {
 
               Consumer(
                 builder: (context, ref, child) {
-                  final logs = ref.watch(batteryViewModelProvider.select((s) => s.logs));
+                  final logs =
+                      ref.watch(batteryViewModelProvider.select((s) => s.logs));
 
                   return Container(
                     width: double.infinity,
@@ -210,9 +264,12 @@ class AnalyticsScreen extends ConsumerWidget {
                       children: [
                         // Table Header
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+                            color: isDark
+                                ? Colors.white10
+                                : Colors.black.withValues(alpha: 0.05),
                             borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(12),
                               topRight: Radius.circular(12),
@@ -224,21 +281,36 @@ class AnalyticsScreen extends ConsumerWidget {
                                 flex: 3,
                                 child: Text(
                                   'TIMESTAMP (Z)',
-                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isDark ? Colors.white60 : Colors.black54),
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark
+                                          ? Colors.white60
+                                          : Colors.black54),
                                 ),
                               ),
                               Expanded(
                                 flex: 2,
                                 child: Text(
                                   'LEVEL',
-                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isDark ? Colors.white60 : Colors.black54),
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark
+                                          ? Colors.white60
+                                          : Colors.black54),
                                 ),
                               ),
                               Expanded(
                                 flex: 3,
                                 child: Text(
                                   'STATE',
-                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isDark ? Colors.white60 : Colors.black54),
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark
+                                          ? Colors.white60
+                                          : Colors.black54),
                                 ),
                               ),
                               Expanded(
@@ -248,7 +320,9 @@ class AnalyticsScreen extends ConsumerWidget {
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white60 : Colors.black54,
+                                    color: isDark
+                                        ? Colors.white60
+                                        : Colors.black54,
                                   ),
                                   textAlign: TextAlign.right,
                                 ),
@@ -256,7 +330,7 @@ class AnalyticsScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        
+
                         // Table Rows
                         if (logs.isEmpty)
                           const Padding(
@@ -272,17 +346,26 @@ class AnalyticsScreen extends ConsumerWidget {
                               final log = logs[index];
                               return Container(
                                 decoration: BoxDecoration(
-                                  border: Border(bottom: BorderSide(color: isDark ? Colors.white10 : Colors.black12, width: 0.5)),
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: isDark
+                                              ? Colors.white10
+                                              : Colors.black12,
+                                          width: 0.5)),
                                 ),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 10),
                                 child: Row(
                                   children: [
                                     // Time
                                     Expanded(
                                       flex: 3,
                                       child: Text(
-                                        DateFormat('HH:mm:ss').format(log.timestamp),
-                                        style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                                        DateFormat('HH:mm:ss')
+                                            .format(log.timestamp),
+                                        style: const TextStyle(
+                                            fontSize: 12,
+                                            fontFamily: 'monospace'),
                                       ),
                                     ),
                                     // Level
@@ -290,7 +373,10 @@ class AnalyticsScreen extends ConsumerWidget {
                                       flex: 2,
                                       child: Text(
                                         '${log.batteryLevel}.0%',
-                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'monospace'),
+                                        style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'monospace'),
                                       ),
                                     ),
                                     // State Tag
@@ -298,7 +384,8 @@ class AnalyticsScreen extends ConsumerWidget {
                                       flex: 3,
                                       child: Align(
                                         alignment: Alignment.centerLeft,
-                                        child: _buildStateTag(log.batteryLevel, log.batteryState),
+                                        child: _buildStateTag(
+                                            log.batteryLevel, log.batteryState),
                                       ),
                                     ),
                                     // Voltage
@@ -309,7 +396,9 @@ class AnalyticsScreen extends ConsumerWidget {
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontFamily: 'monospace',
-                                          color: isDark ? Colors.white70 : Colors.black87,
+                                          color: isDark
+                                              ? Colors.white70
+                                              : Colors.black87,
                                         ),
                                         textAlign: TextAlign.right,
                                       ),
@@ -353,9 +442,9 @@ class AnalyticsScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: tagColor.withOpacity(0.12),
+        color: tagColor.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: tagColor.withOpacity(0.3), width: 0.5),
+        border: Border.all(color: tagColor.withValues(alpha: 0.3), width: 0.5),
       ),
       child: Text(
         label,

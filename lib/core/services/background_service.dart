@@ -13,15 +13,16 @@ void callbackDispatcher() {
       if (!Hive.isAdapterRegistered(0)) {
         Hive.registerAdapter(BatteryLogAdapter());
       }
-      
-      final logBox = await Hive.openBox<BatteryLog>(AppConstants.batteryBoxName);
+
+      final logBox =
+          await Hive.openBox<BatteryLog>(AppConstants.batteryBoxName);
       final settingsBox = await Hive.openBox(AppConstants.settingsBoxName);
-      
+
       final battery = Battery();
       final level = await battery.batteryLevel;
       final status = await battery.batteryState;
-      
-      // Compute realistic simulated voltage, current, temperature
+
+      // voltage/current/temp — simulate something realistic based on charge state
       double voltage = 3.7;
       double current = -0.2;
       double temp = 28.0;
@@ -36,7 +37,7 @@ void callbackDispatcher() {
         temp = 27.0 + (level / 100.0) * 2.0;
       }
 
-      // Log data
+      // snapshot this reading to hive
       final log = BatteryLog(
         batteryLevel: level,
         batteryState: status.name,
@@ -46,15 +47,15 @@ void callbackDispatcher() {
         temperature: double.parse(temp.toStringAsFixed(1)),
       );
       await logBox.add(log);
-      
-      // Read alert settings
-      final lastLog = logBox.length > 1 ? logBox.values.elementAt(logBox.length - 2) : null;
-      final alerts = settingsBox.get(AppConstants.customAlertsKey, defaultValue: [80, 20]) as List;
+
+      final lastLog =
+          logBox.length > 1 ? logBox.values.elementAt(logBox.length - 2) : null;
+      final alerts = settingsBox
+          .get(AppConstants.customAlertsKey, defaultValue: [80, 20]) as List;
       final alertsList = alerts.cast<int>();
-      
-      // If we cross or hit any configured alert threshold
+
       if (alertsList.contains(level)) {
-        // Prevent repeating notification if the level didn't change
+        // Prevent duplicate notifications if the battery level hasn't changed since the last check
         if (lastLog == null || lastLog.batteryLevel != level) {
           await NotificationService.init();
           await NotificationService.showNotification(
@@ -63,12 +64,15 @@ void callbackDispatcher() {
             body: 'Your device battery has reached $level%',
           );
 
-          // Add to alert history
-          final list = settingsBox.get(AppConstants.alertHistoryKey, defaultValue: <String>[]) as List;
+          // also write to the in-app history log
+          final list = settingsBox.get(AppConstants.alertHistoryKey,
+              defaultValue: <String>[]) as List;
           final castedList = list.cast<String>();
           final now = DateTime.now();
-          final timeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
-          castedList.insert(0, '$timeStr | Level: $level% | State: ${status.name.toUpperCase()}');
+          final timeStr =
+              '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
+          castedList.insert(0,
+              '$timeStr | Level: $level% | State: ${status.name.toUpperCase()}');
           if (castedList.length > 50) {
             castedList.removeRange(50, castedList.length);
           }
@@ -76,16 +80,16 @@ void callbackDispatcher() {
         }
       }
     } catch (_) {
-      // Gracefully catch background exceptions
+      // swallow background exceptions — can't crash a workmanager task
     }
-    
+
     return Future.value(true);
   });
 }
 
 class BackgroundService {
   static Future<void> init() async {
-    await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+    await Workmanager().initialize(callbackDispatcher);
   }
 
   static Future<void> registerPeriodicTask() async {
@@ -97,4 +101,3 @@ class BackgroundService {
     );
   }
 }
-

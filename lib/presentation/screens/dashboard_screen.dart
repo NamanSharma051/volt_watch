@@ -13,18 +13,20 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsViewModelProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     // High Contrast configuration overrides
     final Color cardColor = settings.highContrastMode
         ? (isDark ? Colors.black : Colors.white)
         : (isDark ? const Color(0xFF14171A) : Colors.white);
-        
+
     final Color borderColor = settings.highContrastMode
         ? (isDark ? Colors.white : Colors.black)
-        : (isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05));
-        
+        : (isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.05));
+
     final double borderThickness = settings.highContrastMode ? 2.0 : 1.0;
-    
+
     final Color scaffoldBgColor = settings.highContrastMode
         ? (isDark ? Colors.black : Colors.white)
         : (isDark ? const Color(0xFF0B0D0E) : Colors.grey[100]!);
@@ -61,7 +63,9 @@ class DashboardScreen extends ConsumerWidget {
               if (settings.uiHaptics) {
                 HapticFeedback.mediumImpact();
               }
-              ref.read(settingsViewModelProvider.notifier).toggleTheme(!settings.isDarkMode);
+              ref
+                  .read(settingsViewModelProvider.notifier)
+                  .toggleTheme(!settings.isDarkMode);
             },
           ),
           const SizedBox(width: 8),
@@ -73,28 +77,34 @@ class DashboardScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 10),
-            
+
             // 1. Double Ring Cyberpunk Battery Gauge (Only rebuilds when battery level/status changes)
             Consumer(
               builder: (context, ref, child) {
-                final level = ref.watch(batteryViewModelProvider.select((s) => s.level));
-                final status = ref.watch(batteryViewModelProvider.select((s) => s.statusName));
+                final level =
+                    ref.watch(batteryViewModelProvider.select((s) => s.level));
+                final status = ref.watch(
+                    batteryViewModelProvider.select((s) => s.statusName));
                 return BatteryGauge(
                   level: level,
                   status: status,
                 );
               },
             ),
-            
+
             const SizedBox(height: 24),
 
             // 2. Telemetry Info Mini Cards Row (Only rebuilds on estimatedTime, status, level or health changes)
             Consumer(
               builder: (context, ref, child) {
-                final estimatedTime = ref.watch(batteryViewModelProvider.select((s) => s.estimatedTime));
-                final status = ref.watch(batteryViewModelProvider.select((s) => s.status));
-                final level = ref.watch(batteryViewModelProvider.select((s) => s.level));
-                final health = ref.watch(batteryViewModelProvider.select((s) => s.health));
+                final estimatedTime = ref.watch(
+                    batteryViewModelProvider.select((s) => s.estimatedTime));
+                final status =
+                    ref.watch(batteryViewModelProvider.select((s) => s.status));
+                final level =
+                    ref.watch(batteryViewModelProvider.select((s) => s.level));
+                final health =
+                    ref.watch(batteryViewModelProvider.select((s) => s.health));
                 final localPrimaryColor = _getBatteryColor(level);
 
                 return Row(
@@ -105,21 +115,29 @@ class DashboardScreen extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: cardColor,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: borderColor, width: borderThickness),
+                          border: Border.all(
+                              color: borderColor, width: borderThickness),
                         ),
                         child: Column(
                           children: [
-                            Icon(Icons.timer_outlined, color: localPrimaryColor, size: 20),
+                            Icon(Icons.timer_outlined,
+                                color: localPrimaryColor, size: 20),
                             const SizedBox(height: 8),
                             Text(
                               estimatedTime,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  fontSize: 13, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              status == BatteryStateEnum.charging ? 'To Full Charge' : 'Time Left',
-                              style: TextStyle(fontSize: 10, color: isDark ? Colors.white38 : Colors.black38),
+                              status == BatteryStateEnum.charging
+                                  ? 'To Full Charge'
+                                  : 'Time Left',
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  color:
+                                      isDark ? Colors.white38 : Colors.black38),
                             ),
                           ],
                         ),
@@ -132,20 +150,26 @@ class DashboardScreen extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: cardColor,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: borderColor, width: borderThickness),
+                          border: Border.all(
+                              color: borderColor, width: borderThickness),
                         ),
                         child: Column(
                           children: [
-                            const Icon(Icons.security, color: Color(0xFF00FF88), size: 20),
+                            const Icon(Icons.security,
+                                color: Color(0xFF00FF88), size: 20),
                             const SizedBox(height: 8),
                             Text(
                               '$health%',
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'Battery Health',
-                              style: TextStyle(fontSize: 10, color: isDark ? Colors.white38 : Colors.black38),
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  color:
+                                      isDark ? Colors.white38 : Colors.black38),
                             ),
                           ],
                         ),
@@ -161,12 +185,18 @@ class DashboardScreen extends ConsumerWidget {
             // 3. Power Source Telemetry Table (Updates every second, but limited to a lightweight table)
             Consumer(
               builder: (context, ref, child) {
-                final status = ref.watch(batteryViewModelProvider.select((s) => s.status));
-                final level = ref.watch(batteryViewModelProvider.select((s) => s.level));
-                final voltage = ref.watch(batteryViewModelProvider.select((s) => s.voltage));
-                final current = ref.watch(batteryViewModelProvider.select((s) => s.current));
-                final wattage = ref.watch(batteryViewModelProvider.select((s) => s.wattage));
-                final temperature = ref.watch(batteryViewModelProvider.select((s) => s.temperature));
+                final status =
+                    ref.watch(batteryViewModelProvider.select((s) => s.status));
+                final level =
+                    ref.watch(batteryViewModelProvider.select((s) => s.level));
+                final voltage = ref
+                    .watch(batteryViewModelProvider.select((s) => s.voltage));
+                final current = ref
+                    .watch(batteryViewModelProvider.select((s) => s.current));
+                final wattage = ref
+                    .watch(batteryViewModelProvider.select((s) => s.wattage));
+                final temperature = ref.watch(
+                    batteryViewModelProvider.select((s) => s.temperature));
                 final localPrimaryColor = _getBatteryColor(level);
 
                 return Container(
@@ -175,7 +205,8 @@ class DashboardScreen extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: borderColor, width: borderThickness),
+                    border:
+                        Border.all(color: borderColor, width: borderThickness),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,7 +223,9 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                           ),
                           Icon(
-                            status == BatteryStateEnum.charging ? Icons.power : Icons.battery_charging_full,
+                            status == BatteryStateEnum.charging
+                                ? Icons.power
+                                : Icons.battery_charging_full,
                             color: localPrimaryColor,
                             size: 18,
                           ),
@@ -200,11 +233,16 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        status == BatteryStateEnum.charging ? 'AC Adapter (Active)' : 'Internal Battery',
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.blue),
+                        status == BatteryStateEnum.charging
+                            ? 'AC Adapter (Active)'
+                            : 'Internal Battery',
+                        style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue),
                       ),
                       const SizedBox(height: 18),
-                      
+
                       // Telemetry Rows
                       _buildTelemetryRow('Voltage', '$voltage V', isDark),
                       const Divider(color: Colors.white10, height: 16),
@@ -214,7 +252,9 @@ class DashboardScreen extends ConsumerWidget {
                             ? '${current.abs().toStringAsFixed(2)} A'
                             : '${current > 0 ? "+" : ""}${current.toStringAsFixed(2)} A',
                         isDark,
-                        valueColor: current >= 0 ? const Color(0xFF00FF88) : const Color(0xFFFF3B30),
+                        valueColor: current >= 0
+                            ? const Color(0xFF00FF88)
+                            : const Color(0xFFFF3B30),
                       ),
                       const Divider(color: Colors.white10, height: 16),
                       _buildTelemetryRow(
@@ -223,7 +263,9 @@ class DashboardScreen extends ConsumerWidget {
                             ? '${wattage.abs().toStringAsFixed(1)} W'
                             : '${wattage.toStringAsFixed(1)} W',
                         isDark,
-                        valueColor: current >= 0 ? const Color(0xFF00FF88) : (isDark ? Colors.white : Colors.black87),
+                        valueColor: current >= 0
+                            ? const Color(0xFF00FF88)
+                            : (isDark ? Colors.white : Colors.black87),
                       ),
                       const Divider(color: Colors.white10, height: 16),
                       _buildTelemetryRow('Temp', '$temperature °C', isDark),
@@ -238,12 +280,14 @@ class DashboardScreen extends ConsumerWidget {
             // 4. Consumption Rate Bar Chart (Only rebuilds when logs update, not every second)
             Consumer(
               builder: (context, ref, child) {
-                final logs = ref.watch(batteryViewModelProvider.select((s) => s.logs));
+                final logs =
+                    ref.watch(batteryViewModelProvider.select((s) => s.logs));
                 final consumptionValues = logs.isEmpty
                     ? <double>[]
                     : logs
                         .take(8)
-                        .map((log) => (log.voltage ?? 3.7) * (log.current ?? 0.2).abs())
+                        .map((log) =>
+                            (log.voltage ?? 3.7) * (log.current ?? 0.2).abs())
                         .toList()
                         .reversed
                         .toList();
@@ -254,7 +298,8 @@ class DashboardScreen extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: borderColor, width: borderThickness),
+                    border:
+                        Border.all(color: borderColor, width: borderThickness),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,13 +332,15 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTelemetryRow(String label, String value, bool isDark, {Color? valueColor}) {
+  Widget _buildTelemetryRow(String label, String value, bool isDark,
+      {Color? valueColor}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : Colors.black45),
+          style: TextStyle(
+              fontSize: 12, color: isDark ? Colors.white38 : Colors.black45),
         ),
         Text(
           value,

@@ -53,4 +53,3 @@ class BatteryLog extends HiveObject {
     );
   }
 }
-

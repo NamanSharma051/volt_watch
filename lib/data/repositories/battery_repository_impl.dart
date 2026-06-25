@@ -1,199 +1,133 @@
-import 'package:hive_flutter/hive_flutter.dart';
-import '../../core/constants/app_constants.dart';
+import '../datasources/battery_local_datasource.dart';
 import '../models/battery_log.dart';
 import 'battery_repository.dart';
 
+// Thin pass-through to the datasource. No logic here on purpose —
+// Thin pass-through to the local storage datasource to keep the ViewModel
+// agnostic of data persistence details.
 class BatteryRepositoryImpl implements BatteryRepository {
-  final Box<BatteryLog> _logBox;
-  final Box _settingsBox;
+  final BatteryLocalDatasource _datasource;
 
-  BatteryRepositoryImpl(this._logBox, this._settingsBox);
+  const BatteryRepositoryImpl(this._datasource);
+
+  // Logs
+  @override
+  Future<void> logBatteryStatus(BatteryLog log) =>
+      _datasource.logBatteryStatus(log);
 
   @override
-  Future<void> logBatteryStatus(BatteryLog log) async {
-    await _logBox.add(log);
-  }
+  Future<List<BatteryLog>> getBatteryLogs() => _datasource.getBatteryLogs();
 
   @override
-  Future<List<BatteryLog>> getBatteryLogs() async {
-    return _logBox.values.toList().reversed.toList();
-  }
+  Future<void> clearLogs() => _datasource.clearLogs();
+
+  // threshold
+  @override
+  Future<void> setThreshold(int v) => _datasource.setThreshold(v);
 
   @override
-  Future<void> clearLogs() async {
-    await _logBox.clear();
-  }
+  Future<int> getThreshold() => _datasource.getThreshold();
+
+  // warning offset
+  @override
+  Future<void> setWarningOffset(int v) => _datasource.setWarningOffset(v);
 
   @override
-  Future<void> setThreshold(int threshold) async {
-    await _settingsBox.put(AppConstants.thresholdKey, threshold);
-  }
+  Future<int> getWarningOffset() => _datasource.getWarningOffset();
+
+  // theme
+  @override
+  Future<void> setThemeMode(bool v) => _datasource.setThemeMode(v);
 
   @override
-  Future<int> getThreshold() async {
-    return _settingsBox.get(AppConstants.thresholdKey, defaultValue: 15);
-  }
+  Future<bool> getThemeMode() => _datasource.getThemeMode();
+
+  // polling interval
+  @override
+  Future<void> setPollingInterval(double v) =>
+      _datasource.setPollingInterval(v);
 
   @override
-  Future<void> setThemeMode(bool isDark) async {
-    await _settingsBox.put(AppConstants.themeKey, isDark);
-  }
+  Future<double> getPollingInterval() => _datasource.getPollingInterval();
+
+  // smoothing
+  @override
+  Future<void> setPredictiveSmoothing(bool v) =>
+      _datasource.setPredictiveSmoothing(v);
 
   @override
-  Future<bool> getThemeMode() async {
-    return _settingsBox.get(AppConstants.themeKey, defaultValue: true); // Default to dark mode as requested by cyberpunk styling
-  }
+  Future<bool> getPredictiveSmoothing() => _datasource.getPredictiveSmoothing();
+
+  // high contrast
+  @override
+  Future<void> setHighContrast(bool v) => _datasource.setHighContrast(v);
 
   @override
-  Future<void> setWarningOffset(int offset) async {
-    await _settingsBox.put(AppConstants.warningOffsetKey, offset);
-  }
+  Future<bool> getHighContrast() => _datasource.getHighContrast();
+
+  // absolute values
+  @override
+  Future<void> setAbsoluteValues(bool v) => _datasource.setAbsoluteValues(v);
 
   @override
-  Future<int> getWarningOffset() async {
-    return _settingsBox.get(AppConstants.warningOffsetKey, defaultValue: 10);
-  }
+  Future<bool> getAbsoluteValues() => _datasource.getAbsoluteValues();
+
+  // haptics
+  @override
+  Future<void> setThresholdHaptics(bool v) =>
+      _datasource.setThresholdHaptics(v);
 
   @override
-  Future<void> setPollingInterval(double seconds) async {
-    await _settingsBox.put(AppConstants.pollingIntervalKey, seconds);
-  }
+  Future<bool> getThresholdHaptics() => _datasource.getThresholdHaptics();
 
   @override
-  Future<double> getPollingInterval() async {
-    return _settingsBox.get(AppConstants.pollingIntervalKey, defaultValue: 1.0);
-  }
+  Future<void> setUiHaptics(bool v) => _datasource.setUiHaptics(v);
 
   @override
-  Future<void> setPredictiveSmoothing(bool enabled) async {
-    await _settingsBox.put(AppConstants.predictiveSmoothingKey, enabled);
-  }
+  Future<bool> getUiHaptics() => _datasource.getUiHaptics();
+
+  // diagnostics
+  @override
+  Future<void> setDiagnosticsLastRun(String v) =>
+      _datasource.setDiagnosticsLastRun(v);
 
   @override
-  Future<bool> getPredictiveSmoothing() async {
-    return _settingsBox.get(AppConstants.predictiveSmoothingKey, defaultValue: true);
-  }
+  Future<String> getDiagnosticsLastRun() => _datasource.getDiagnosticsLastRun();
 
   @override
-  Future<void> setHighContrast(bool enabled) async {
-    await _settingsBox.put(AppConstants.highContrastKey, enabled);
-  }
+  Future<void> setDiagnosticsStatus(String v) =>
+      _datasource.setDiagnosticsStatus(v);
 
   @override
-  Future<bool> getHighContrast() async {
-    return _settingsBox.get(AppConstants.highContrastKey, defaultValue: false);
-  }
+  Future<String> getDiagnosticsStatus() => _datasource.getDiagnosticsStatus();
+
+  // active profile
+  @override
+  Future<void> setActiveProfile(String v) => _datasource.setActiveProfile(v);
 
   @override
-  Future<void> setAbsoluteValues(bool enabled) async {
-    await _settingsBox.put(AppConstants.absoluteValuesKey, enabled);
-  }
+  Future<String> getActiveProfile() => _datasource.getActiveProfile();
+
+  // custom alerts
+  @override
+  Future<List<int>> getCustomAlerts() => _datasource.getCustomAlerts();
 
   @override
-  Future<bool> getAbsoluteValues() async {
-    return _settingsBox.get(AppConstants.absoluteValuesKey, defaultValue: true);
-  }
+  Future<void> addCustomAlert(int threshold) =>
+      _datasource.addCustomAlert(threshold);
 
   @override
-  Future<void> setThresholdHaptics(bool enabled) async {
-    await _settingsBox.put(AppConstants.thresholdHapticsKey, enabled);
-  }
+  Future<void> removeCustomAlert(int threshold) =>
+      _datasource.removeCustomAlert(threshold);
+
+  // alert history
+  @override
+  Future<List<String>> getAlertHistory() => _datasource.getAlertHistory();
 
   @override
-  Future<bool> getThresholdHaptics() async {
-    return _settingsBox.get(AppConstants.thresholdHapticsKey, defaultValue: true);
-  }
+  Future<void> addAlertHistoryLog(String message) =>
+      _datasource.addAlertHistoryLog(message);
 
   @override
-  Future<void> setUiHaptics(bool enabled) async {
-    await _settingsBox.put(AppConstants.uiHapticsKey, enabled);
-  }
-
-  @override
-  Future<bool> getUiHaptics() async {
-    return _settingsBox.get(AppConstants.uiHapticsKey, defaultValue: false);
-  }
-
-  @override
-  Future<void> setDiagnosticsLastRun(String timestamp) async {
-    await _settingsBox.put(AppConstants.diagnosticsLastRunKey, timestamp);
-  }
-
-  @override
-  Future<String> getDiagnosticsLastRun() async {
-    return _settingsBox.get(AppConstants.diagnosticsLastRunKey, defaultValue: '08:42:11 UTC');
-  }
-
-  @override
-  Future<void> setDiagnosticsStatus(String status) async {
-    await _settingsBox.put(AppConstants.diagnosticsStatusKey, status);
-  }
-
-  @override
-  Future<String> getDiagnosticsStatus() async {
-    return _settingsBox.get(AppConstants.diagnosticsStatusKey, defaultValue: 'NOMINAL');
-  }
-
-  @override
-  Future<void> setActiveProfile(String profileName) async {
-    await _settingsBox.put(AppConstants.activeProfileKey, profileName);
-  }
-
-  @override
-  Future<String> getActiveProfile() async {
-    return _settingsBox.get(AppConstants.activeProfileKey, defaultValue: 'High Performance');
-  }
-
-  @override
-  Future<List<int>> getCustomAlerts() async {
-    final list = _settingsBox.get(AppConstants.customAlertsKey, defaultValue: [80, 20]);
-    if (list is List) {
-      return list.cast<int>();
-    }
-    return [80, 20];
-  }
-
-  @override
-  Future<void> addCustomAlert(int threshold) async {
-    final alerts = await getCustomAlerts();
-    if (!alerts.contains(threshold)) {
-      alerts.add(threshold);
-      alerts.sort();
-      await _settingsBox.put(AppConstants.customAlertsKey, alerts);
-    }
-  }
-
-  @override
-  Future<void> removeCustomAlert(int threshold) async {
-    final alerts = await getCustomAlerts();
-    if (alerts.contains(threshold)) {
-      alerts.remove(threshold);
-      await _settingsBox.put(AppConstants.customAlertsKey, alerts);
-    }
-  }
-
-  @override
-  Future<List<String>> getAlertHistory() async {
-    final list = _settingsBox.get(AppConstants.alertHistoryKey, defaultValue: <String>[]);
-    if (list is List) {
-      return list.cast<String>();
-    }
-    return <String>[];
-  }
-
-  @override
-  Future<void> addAlertHistoryLog(String message) async {
-    final list = await getAlertHistory();
-    list.insert(0, message);
-    if (list.length > 50) {
-      list.removeRange(50, list.length);
-    }
-    await _settingsBox.put(AppConstants.alertHistoryKey, list);
-  }
-
-  @override
-  Future<void> clearAlertHistory() async {
-    await _settingsBox.put(AppConstants.alertHistoryKey, <String>[]);
-  }
+  Future<void> clearAlertHistory() => _datasource.clearAlertHistory();
 }
-

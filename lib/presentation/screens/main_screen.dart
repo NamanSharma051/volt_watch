@@ -24,7 +24,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0B0D0E) : Colors.grey[50],
       body: IndexedStack(
@@ -35,7 +35,9 @@ class _MainScreenState extends State<MainScreen> {
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) => setState(() => _currentIndex = index),
         backgroundColor: isDark ? const Color(0xFF0F1214) : Colors.white,
-        indicatorColor: isDark ? const Color(0xFF00FF88).withOpacity(0.15) : Colors.blue.withOpacity(0.1),
+        indicatorColor: isDark
+            ? const Color(0xFF00FF88).withValues(alpha: 0.15)
+            : Colors.blue.withValues(alpha: 0.1),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         height: 65,
         elevation: 10,
@@ -57,7 +59,8 @@ class _MainScreenState extends State<MainScreen> {
               backgroundColor: isDark ? const Color(0xFFFF3B30) : Colors.red,
               child: const Icon(Icons.notifications_outlined),
             ),
-            selectedIcon: const Icon(Icons.notifications, color: Color(0xFF00FF88)),
+            selectedIcon:
+                const Icon(Icons.notifications, color: Color(0xFF00FF88)),
             label: 'Alerts',
           ),
           const NavigationDestination(
@@ -70,4 +73,3 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 }
-

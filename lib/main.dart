@@ -12,15 +12,17 @@ import 'presentation/viewmodels/providers.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Hive
+
+  // open hive boxes before anything touches storage
   await Hive.initFlutter();
   Hive.registerAdapter(BatteryLogAdapter());
   final logBox = await Hive.openBox<BatteryLog>(AppConstants.batteryBoxName);
   final settingsBox = await Hive.openBox(AppConstants.settingsBoxName);
-  
-  // Initialize Services
-  if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS)) {
+
+  // skip notifications + background task on web, they don't work there anyway
+  if (!kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS)) {
     await NotificationService.init();
     await BackgroundService.init();
     await BackgroundService.registerPeriodicTask();

@@ -4,10 +4,10 @@ abstract class BatteryRepository {
   Future<void> logBatteryStatus(BatteryLog log);
   Future<List<BatteryLog>> getBatteryLogs();
   Future<void> clearLogs();
-  
+
   Future<void> setThreshold(int threshold);
   Future<int> getThreshold();
-  
+
   Future<void> setThemeMode(bool isDark);
   Future<bool> getThemeMode();
 
@@ -49,4 +49,3 @@ abstract class BatteryRepository {
   Future<void> addAlertHistoryLog(String message);
   Future<void> clearAlertHistory();
 }
-

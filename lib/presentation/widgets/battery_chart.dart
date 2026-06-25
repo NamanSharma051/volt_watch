@@ -28,11 +28,14 @@ class _BatteryChartState extends State<BatteryChart> {
     } else if (_activeFilter == '1H') {
       // Last 1 hour
       final oneHourAgo = now.subtract(const Duration(hours: 1));
-      filtered = widget.logs.where((log) => log.timestamp.isAfter(oneHourAgo)).toList();
+      filtered = widget.logs
+          .where((log) => log.timestamp.isAfter(oneHourAgo))
+          .toList();
     } else {
       // Last 24 hours
       final oneDayAgo = now.subtract(const Duration(hours: 24));
-      filtered = widget.logs.where((log) => log.timestamp.isAfter(oneDayAgo)).toList();
+      filtered =
+          widget.logs.where((log) => log.timestamp.isAfter(oneDayAgo)).toList();
     }
 
     // Sort chronologically for chart drawing (ascending)
@@ -52,7 +55,7 @@ class _BatteryChartState extends State<BatteryChart> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'DISCHARGE CURVE (${_activeFilter})',
+              'DISCHARGE CURVE ($_activeFilter)',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -62,7 +65,9 @@ class _BatteryChartState extends State<BatteryChart> {
             ),
             Container(
               decoration: BoxDecoration(
-                color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(4),
               ),
               padding: const EdgeInsets.all(2),
@@ -72,14 +77,17 @@ class _BatteryChartState extends State<BatteryChart> {
                   return GestureDetector(
                     onTap: () => setState(() => _activeFilter = filter),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: isActive
                             ? (isDark ? const Color(0xFF1E3A3A) : Colors.white)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(3),
                         border: isActive && isDark
-                            ? Border.all(color: const Color(0xFF00FF88).withOpacity(0.3), width: 1)
+                            ? Border.all(
+                                color: const Color(0xFF00FF88).withValues(alpha: 0.3),
+                                width: 1)
                             : null,
                       ),
                       child: Text(
@@ -88,7 +96,9 @@ class _BatteryChartState extends State<BatteryChart> {
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: isActive
-                              ? (isDark ? const Color(0xFF00FF88) : Colors.black87)
+                              ? (isDark
+                                  ? const Color(0xFF00FF88)
+                                  : Colors.black87)
                               : (isDark ? Colors.white38 : Colors.black45),
                         ),
                       ),
@@ -106,7 +116,9 @@ class _BatteryChartState extends State<BatteryChart> {
               ? Center(
                   child: Text(
                     'No data logs in this range',
-                    style: TextStyle(color: isDark ? Colors.white30 : Colors.black38, fontSize: 13),
+                    style: TextStyle(
+                        color: isDark ? Colors.white30 : Colors.black38,
+                        fontSize: 13),
                   ),
                 )
               : LineChart(
@@ -114,15 +126,17 @@ class _BatteryChartState extends State<BatteryChart> {
                     lineTouchData: LineTouchData(
                       handleBuiltInTouches: true,
                       touchTooltipData: LineTouchTooltipData(
-                        tooltipBgColor: isDark ? const Color(0xFF14171A) : Colors.white,
+                        tooltipBgColor:
+                            isDark ? const Color(0xFF14171A) : Colors.white,
                         tooltipBorder: BorderSide(
-                          color: const Color(0xFF00FF88).withOpacity(0.5),
+                          color: const Color(0xFF00FF88).withValues(alpha: 0.5),
                           width: 1,
                         ),
                         getTooltipItems: (touchedSpots) {
                           return touchedSpots.map((LineBarSpot touchedSpot) {
                             final log = filteredLogs[touchedSpot.x.toInt()];
-                            final timeStr = DateFormat('HH:mm:ss').format(log.timestamp);
+                            final timeStr =
+                                DateFormat('HH:mm:ss').format(log.timestamp);
                             return LineTooltipItem(
                               '$timeStr\n',
                               TextStyle(
@@ -142,7 +156,9 @@ class _BatteryChartState extends State<BatteryChart> {
                                 TextSpan(
                                   text: 'V: ${log.voltage ?? 12.0} V',
                                   style: TextStyle(
-                                    color: isDark ? Colors.white38 : Colors.black38,
+                                    color: isDark
+                                        ? Colors.white38
+                                        : Colors.black38,
                                     fontSize: 10,
                                   ),
                                 ),
@@ -168,8 +184,10 @@ class _BatteryChartState extends State<BatteryChart> {
                     ),
                     titlesData: FlTitlesData(
                       show: true,
-                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
                       leftTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
@@ -197,13 +215,15 @@ class _BatteryChartState extends State<BatteryChart> {
                               return const SizedBox.shrink();
                             }
                             final log = filteredLogs[index];
-                            final timeStr = DateFormat('HH:mm').format(log.timestamp);
+                            final timeStr =
+                                DateFormat('HH:mm').format(log.timestamp);
                             return Padding(
                               padding: const EdgeInsets.only(top: 6.0),
                               child: Text(
                                 timeStr,
                                 style: TextStyle(
-                                  color: isDark ? Colors.white38 : Colors.black38,
+                                  color:
+                                      isDark ? Colors.white38 : Colors.black38,
                                   fontSize: 8,
                                   fontFamily: 'monospace',
                                 ),
@@ -217,8 +237,12 @@ class _BatteryChartState extends State<BatteryChart> {
                     borderData: FlBorderData(
                       show: true,
                       border: Border(
-                        bottom: BorderSide(color: isDark ? Colors.white10 : Colors.black12, width: 1),
-                        left: BorderSide(color: isDark ? Colors.white10 : Colors.black12, width: 1),
+                        bottom: BorderSide(
+                            color: isDark ? Colors.white10 : Colors.black12,
+                            width: 1),
+                        left: BorderSide(
+                            color: isDark ? Colors.white10 : Colors.black12,
+                            width: 1),
                       ),
                     ),
                     minX: 0,
@@ -228,7 +252,8 @@ class _BatteryChartState extends State<BatteryChart> {
                     lineBarsData: [
                       LineChartBarData(
                         spots: filteredLogs.asMap().entries.map((entry) {
-                          return FlSpot(entry.key.toDouble(), entry.value.batteryLevel.toDouble());
+                          return FlSpot(entry.key.toDouble(),
+                              entry.value.batteryLevel.toDouble());
                         }).toList(),
                         isCurved: true,
                         color: const Color(0xFF00FF88),
@@ -236,7 +261,8 @@ class _BatteryChartState extends State<BatteryChart> {
                         isStrokeCapRound: true,
                         dotData: FlDotData(
                           show: true,
-                          getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                          getDotPainter: (spot, percent, barData, index) =>
+                              FlDotCirclePainter(
                             radius: 3,
                             color: const Color(0xFF14171A),
                             strokeColor: const Color(0xFF00FF88),
@@ -245,7 +271,7 @@ class _BatteryChartState extends State<BatteryChart> {
                         ),
                         belowBarData: BarAreaData(
                           show: true,
-                          color: const Color(0xFF00FF88).withOpacity(0.08),
+                          color: const Color(0xFF00FF88).withValues(alpha: 0.08),
                         ),
                       ),
                     ],
@@ -256,4 +282,3 @@ class _BatteryChartState extends State<BatteryChart> {
     );
   }
 }
-

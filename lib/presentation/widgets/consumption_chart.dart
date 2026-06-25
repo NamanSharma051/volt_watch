@@ -11,12 +11,12 @@ class ConsumptionChart extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Use default values if empty
-    final displayValues = consumptionValues.isNotEmpty 
-        ? consumptionValues 
+    final displayValues = consumptionValues.isNotEmpty
+        ? consumptionValues
         : [1.2, 2.4, 1.8, 3.5, 5.1, 4.2, 5.8, 2.1];
 
-    final maxVal = displayValues.isEmpty 
-        ? 8.0 
+    final maxVal = displayValues.isEmpty
+        ? 8.0
         : displayValues.reduce((a, b) => a > b ? a : b);
     final computedMaxY = maxVal > 8.0 ? maxVal * 1.15 : 8.0;
 
@@ -29,7 +29,8 @@ class ConsumptionChart extends StatelessWidget {
           enabled: true,
           touchTooltipData: BarTouchTooltipData(
             tooltipBgColor: isDark ? const Color(0xFF14171A) : Colors.white,
-            tooltipBorder: BorderSide(color: const Color(0xFF00FF88).withOpacity(0.5), width: 1),
+            tooltipBorder: BorderSide(
+                color: const Color(0xFF00FF88).withValues(alpha: 0.5), width: 1),
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               return BarTooltipItem(
                 '${rod.toY.toStringAsFixed(1)} W',

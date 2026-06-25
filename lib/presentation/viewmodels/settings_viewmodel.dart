@@ -66,7 +66,8 @@ class SettingsState {
       uiHaptics: uiHaptics ?? this.uiHaptics,
       diagnosticsLastRun: diagnosticsLastRun ?? this.diagnosticsLastRun,
       diagnosticsStatus: diagnosticsStatus ?? this.diagnosticsStatus,
-      isExecutingDiagnostics: isExecutingDiagnostics ?? this.isExecutingDiagnostics,
+      isExecutingDiagnostics:
+          isExecutingDiagnostics ?? this.isExecutingDiagnostics,
       activeProfile: activeProfile ?? this.activeProfile,
       customAlerts: customAlerts ?? this.customAlerts,
       alertHistory: alertHistory ?? this.alertHistory,
@@ -134,8 +135,10 @@ class SettingsViewModel extends StateNotifier<SettingsState> {
   }
 
   Future<void> setThreshold(int value) async {
-    await _repository.setThreshold(value);
-    state = state.copyWith(threshold: value);
+    // Clamp to the valid slider range [5, 30] before persisting
+    final clamped = value.clamp(5, 30);
+    await _repository.setThreshold(clamped);
+    state = state.copyWith(threshold: clamped);
   }
 
   Future<void> setWarningOffset(int value) async {
@@ -181,7 +184,7 @@ class SettingsViewModel extends StateNotifier<SettingsState> {
   Future<void> setActiveProfile(String value) async {
     await _repository.setActiveProfile(value);
     state = state.copyWith(activeProfile: value);
-    
+
     // Automatically configure parameters based on preset
     if (value == 'High Performance') {
       await setPollingInterval(1.0);
@@ -196,14 +199,14 @@ class SettingsViewModel extends StateNotifier<SettingsState> {
 
   Future<void> executeDiagnostics() async {
     state = state.copyWith(isExecutingDiagnostics: true);
-    
+
     // Simulate telemetry diagnostic tests (e.g. 2s wait)
     await Future.delayed(const Duration(seconds: 2));
-    
-    final nowStr = DateFormat('HH:mm:ss').format(DateTime.now()) + ' UTC';
+
+    final nowStr = '${DateFormat('HH:mm:ss').format(DateTime.now())} UTC';
     await _repository.setDiagnosticsLastRun(nowStr);
     await _repository.setDiagnosticsStatus('NOMINAL');
-    
+
     state = state.copyWith(
       isExecutingDiagnostics: false,
       diagnosticsLastRun: nowStr,
@@ -235,7 +238,7 @@ class SettingsViewModel extends StateNotifier<SettingsState> {
   }
 
   Future<void> resetToDefaults() async {
-    await setThreshold(80);
+    await setThreshold(15); // 15% — within slider range [5, 30]
     await setWarningOffset(10);
     await toggleTheme(true);
     await setPollingInterval(1.0);
@@ -247,4 +250,3 @@ class SettingsViewModel extends StateNotifier<SettingsState> {
     await setActiveProfile('High Performance');
   }
 }
-

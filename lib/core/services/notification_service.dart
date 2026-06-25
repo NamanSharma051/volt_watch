@@ -12,7 +12,7 @@ class NotificationService {
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    
+
     const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings(
       requestAlertPermission: false,
@@ -20,7 +20,8 @@ class NotificationService {
       requestSoundPermission: false,
     );
 
-    const InitializationSettings initializationSettings = InitializationSettings(
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsIOS,
     );
@@ -42,16 +43,18 @@ class NotificationService {
     await init();
     try {
       // Handle Android Permissions
-      final androidPlugin = _notificationsPlugin
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      final androidPlugin =
+          _notificationsPlugin.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
       if (androidPlugin != null) {
         final granted = await androidPlugin.requestNotificationsPermission();
         return granted ?? false;
       }
 
-      // Handle iOS Permissions
-      final iosPlugin = _notificationsPlugin
-          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+      // iOS does it differently
+      final iosPlugin =
+          _notificationsPlugin.resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>();
       if (iosPlugin != null) {
         final granted = await iosPlugin.requestPermissions(
           alert: true,
@@ -74,7 +77,8 @@ class NotificationService {
   }) async {
     await init();
 
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
       'battery_alerts',
       'Battery Alerts',
       channelDescription: 'Notifications for battery threshold alerts',
@@ -97,10 +101,10 @@ class NotificationService {
     );
 
     try {
-      await _notificationsPlugin.show(id, title, body, platformDetails, payload: payload);
+      await _notificationsPlugin.show(id, title, body, platformDetails,
+          payload: payload);
     } catch (e) {
       debugPrint('Error showing notification: $e');
     }
   }
 }
-
